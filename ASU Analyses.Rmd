@@ -1,149 +1,46 @@
 ---
-title: "Amy R Project Week 8"
+title: "Amy R Project"
 author: "Amy Germuth"
 date: "`r Sys.Date()`"
 output: word_document
 ---
 
-```{r installr}
-#This just ensures R is up-to-date.
-install.packages("installr")
-library(installr)
-updateR()
-```
 
-```{r remove-rlang}
-# This and the following code were to deal with an error message that my rlang package was not the newest version of the package which was required.
-remove.packages("rlang")
-```
-
-```{r install-rlang}
-install.packages("rlang")
-```
-
-```{r libraries, include=FALSE}
+```{r setup, include=FALSE}
 # Loading libraries
+knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(janitor)
 ```
 
-```{r read-data}
-# Reading in data and assigning it the name "amy_data". I have already set my working directory above to the file on my desktop where this data file lives. 
+
+```{r read data}
+# Reading in data and assinging it the name "amy_data". I have already set my working directory above to the file on my desktop where this datafile lives. 
 amy_data <- read_csv("AmyRData.csv")
 amy_data
 ```
 
-```{r clean-data}
-# Using clean_names from the janitor package to clean my variable names and then renaming my data "amy_data_clean". I typed "amy_data_clean" in the last line so I could see my dataset and make sure the variables names had been cleaned. I am also recoding numeric data into text related to variable "grad_plans"
+```{r clean data rename it}
+# Using clean_names from the janitor package to clean my variable names and then renaming my data "amy_data_clean". I typed "amy_data_clean" in the last line so I could see my dataset and make sure the variables names hadbeen cleaned. 
 amy_data_clean <- amy_data %>%
-  clean_names() %>%
-  mutate(grad_plans_labels = case_when(
-    grad_plans == 0 ~ "Going to Med School",
-      grad_plans == 1 ~ "Going to Grad School",
-       grad_plans == 2 ~ "Going into Research",
-        grad_plans == 3 ~ "Studying Abroad",
-          grad_plans == 4 ~ "Doing an Internship"))
+  clean_names()
 amy_data_clean
 ```
 
-```{r EvalWorks-Style}
-# Using the function command to create a function so I can utilize my style with my ggplots. 
-EvalWorks_style <- function() {
-  font <- "Verdana"
-    ggplot2::theme(
-    # TEXT FORMAT
-    # This sets the font, size, type and color of text for the chart's title
-    plot.title = ggplot2::element_text(
-      family = font,
-      size = 28,
-      face = "bold",
-      color = "#222222"
-    ),
-    # This sets the font, size, type and color of text for the chart's subtitle,
-    # as well as setting a margin between the title and the subtitle
-    plot.subtitle = ggplot2::element_text(
-      family = font,
-      size = 22,
-      color = "#000C64",
-      margin = ggplot2::margin(9, 0, 9, 0)
-    ),
-    # This leaves the caption text element empty, because it is set elsewhere in the finalized plot function
-    plot.caption = ggplot2::element_blank(),
-    # LEGEND FORMAT
-    # This sets the position and alignment of the legend, removes a title and background for it
-    # and sets the requirements for any text within the legend.
-    # The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
-    legend.position = "top",
-    legend.text.align = 0,
-    legend.background = ggplot2::element_blank(),
-    legend.title = ggplot2::element_blank(),
-    legend.key = ggplot2::element_blank(),
-    legend.text = ggplot2::element_text(
-      family = font,
-      size = 18,
-      ),
-        # AXIS FORMAT
-    # This sets the text font, size and color for the axis test, as well as setting the margins and removes lines and ticks.
-    # In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
-    axis.title = ggplot2::element_blank(),
-    axis.text = ggplot2::element_text(
-      family = font,
-      size = 18,
-      color = "#222222"
-    ),
-    axis.text.x = ggplot2::element_text(margin = ggplot2::margin(5, b = 10)),
-    axis.ticks = ggplot2::element_blank(),
-    axis.line = ggplot2::element_blank(),
-    # GRID LINES
-    # This removes all minor gridlines and adds major y gridlines.
-    # In many cases you will want to change this to remove y gridlines and add x gridlines.
-    # The cookbook shows you examples for doing so.
-    panel.grid.minor = ggplot2::element_blank(),
-    panel.grid.major.y = ggplot2::element_line(color = "#cbcbcb"),
-    panel.grid.major.x = ggplot2::element_blank(),
-    # BLANK BACKGROUND
-    # This sets the panel background as blank, removing the standard grey ggplot background colour from the plot.
-    panel.background = ggplot2::element_blank(),
-    # STRIP BACKGROUND
-    # This sets the panel background for facet-wrapped plots to white,
-    # removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22.
-    strip.background = ggplot2::element_rect(fill = "white"),
-    strip.text = ggplot2::element_text(size = 22, hjust = 0)
-  )
-}
+```{r grad_plans histogram}
+#histogram of participants' plans after graduation - used facet_wrap to break it apart by gender. 
+ggplot(data = amy_data_clean, 
+       mapping = aes(x = grad_plans)) +
+  geom_histogram(bins=50)+
+            scale_fill_brewer(palette = "Dark2") +
+  labs(title = "S-STEM Participants' Plans Aftr Graduation",
+       y = "Count",
+       x = "Plan")+
+facet_wrap(~gender)
 ```
 
-```{r Visual_grad_plans}
-# Using ggplot to make a column chart of graduates plans by gender and plan. 
-amy_data_clean %>% 
-  group_by(grad_plans_labels) %>% 
-  summarise(n= n(), gender) %>%
-  ungroup() %>% 
-  distinct() %>% 
-  ggplot(aes(x = n,
-             y = grad_plans_labels)) +
-  geom_col() +
-  facet_wrap(~gender) + labs(title = "Graduates' Plans", subtitle = "Most are studying abroad or going to grad school") + EvalWorks_style()
-```
-
-```{r}
-amy_data_clean
-```
-```{r Tyding-Data}
-student_graduation_plans <- amy_data_clean %>%
-  select("plans_after_graduation") %>%
-        separate_rows(plans_after_graduation, sep = ",")
-student_graduation_plans
-```
-```{r}
-table(student_graduation_plans$plans_after_graduation)
-```
-
-
-```{r}
-summary_of_grad_plans <- student_graduation_plans %>% 
-  group_by(gender) %>%
-  count(plans_after_graduation) 
-summary_of_grad_plans
+```{r ethnicity by gender table}
+# Make table of Ethnicity by Gender
+table(amy_data_clean$gender,amy_data_clean$race)
 ```
 
